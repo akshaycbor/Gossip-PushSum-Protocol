@@ -31,7 +31,6 @@ defmodule SupervisorNode do
         randomNode |> elem(1) |> GenServer.call({:add_message, message})
     end
 
-
     def get_full_neighbours(childActors) do
         Enum.reduce(childActors, %{}, fn(nodeId, acc) -> Map.put(acc, nodeId, Enum.filter(childActors, fn x -> x != nodeId end)) end)
     end
@@ -88,5 +87,31 @@ defmodule SupervisorNode do
                  Enum.at(childActors, down)]
             )
         end)
+    end
+
+    def get_rand2D_neighbours(childActors) do
+        childCoordinates = Enum.map(childActors, fn(x) ->
+            {x, :rand.uniform(100)/100, :rand.uniform(100)/100}
+        end)
+        Enum.reduce(childCoordinates, %{}, fn(x, acc) ->
+            Map.put(acc, elem(x,0), Enum.reduce(childCoordinates, [], fn(y, list_acc) ->
+                list_acc ++ 
+                    if y != x && within_d_distance?(x, y, 0.1) do
+                        [elem(y,0)]
+                    else
+                        []
+                    end
+                end)
+            )
+        end)
+    end
+
+    def within_d_distance?(childCoordinate1, childCoordinate2, d) do
+        {x1,y1, x2,y2} = {elem(childCoordinate1,1),elem(childCoordinate1,2), elem(childCoordinate2,1),elem(childCoordinate2,2) }
+        (x1-x2)*(x1-x2) + (y1-y2)*(y1-y2) <= d*d 
+    end
+
+    def get_3dgrid_neighbours(childActors) do
+        
     end
 end
