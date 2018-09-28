@@ -24,18 +24,16 @@ defmodule ChildNode do
         if counter>=10 do
             { :noreply, {counter, neighbours} }
         else
-            IO.inspect({counter, neighbours})
             if valid_neighbours != [] do
                 randomNeighbour = Enum.random(valid_neighbours)
                 resp = randomNeighbour |> elem(1) |> GenServer.call({:add_message, message})
-                IO.inspect(resp)
                 valid_neighbours =
                     if resp == :dead do
                         valid_neighbours -- [randomNeighbour]
                     else
                         valid_neighbours
                     end
-                :timer.sleep(1000)
+                :timer.sleep(1)
                 GenServer.cast(self(), {:transmit_message, {message, valid_neighbours}})    
             end
             { :noreply, {counter, neighbours} }
