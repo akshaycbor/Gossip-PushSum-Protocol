@@ -31,7 +31,28 @@ defmodule SupervisorNode do
 
     def add_message(childActors, message) do
         randomNode = Enum.random(childActors)
-        randomNode |> elem(1) |> GenServer.call({:add_message, message})
+
+        :ets.new(:count, [:set, :public, :named_table])
+        :ets.insert(:count, {"received", 0})
+        :ets.insert(:count, {"stopped", 0})
+
+        start_time = Time.utc_now()
+        randomNode |> elem(1) |> GenServer.cast({:add_message, message})
+        check_convergence(length(childActors), start_time)
     end
 
+    def check_convergence(numNodes, start_time) do
+        
+        [{_, received}] = :ets.lookup(:count, "received")
+        [{_, stopped}] = :ets.lookup(:count, "stopped")
+
+        if received/numNodes > 0.95 || stopped/numNodes > 0.70 do
+            IO.puts("Received #{received}, Stopped #{stopped}, Time taken #{Time.diff(Time.utc_now, start_time, :microsecond)}")
+            Process.exit(self(), :kill)
+        else
+            :timer.sleep(100)
+            IO.puts("Received #{received}, Stopped #{stopped}")
+            check_convergence(numNodes, start_time)
+        end
+    end
 end
