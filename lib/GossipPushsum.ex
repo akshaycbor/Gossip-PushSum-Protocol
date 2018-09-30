@@ -5,7 +5,7 @@ defmodule GossipPushsum do
     """
 
     def init(numNodes, topology, algorithm) do
-        
+
         if algorithm != "gossip" && algorithm != "pushsum" do
             IO.puts("Invalid input")
         end

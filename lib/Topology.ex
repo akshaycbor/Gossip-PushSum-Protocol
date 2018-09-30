@@ -101,7 +101,7 @@ defmodule Topology do
         n2 = a*b
         n3 = a*b*c
 
-        Enum.reduce( 1..length(childActors), %{}, fn(x,acc) ->
+        Enum.reduce( 0..length(childActors)-1, %{}, fn(x,acc) ->
             neighbours = []
             # up
             neighbours = neighbours ++ if rem(x,n2) < n, do: [], else: [Enum.at(childActors, x-n)]

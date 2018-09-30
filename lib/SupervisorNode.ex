@@ -51,7 +51,6 @@ defmodule SupervisorNode do
             Process.exit(self(), :kill)
         else
             :timer.sleep(10)
-            IO.puts("Received #{received}, Stopped #{stopped}")
             check_convergence(numNodes, start_time)
         end
     end
@@ -77,7 +76,6 @@ defmodule SupervisorNode do
             Process.exit(self(), :kill)
         else
             :timer.sleep(10)
-            IO.puts("Dead #{dead}")
             check_pushsum_convergence(numNodes, start_time)
         end
     end
