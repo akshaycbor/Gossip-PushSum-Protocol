@@ -36,8 +36,11 @@ defmodule Topology do
     end
 
     def get_torus_neighbours(childActors) do
-        n = trunc( :math.sqrt(length(childActors)) )
-        n2 = n*n
+
+        factors = get_divisors(length(childActors))
+        n = Enum.at(factors, div(length(factors), 2))
+        n2 = length(childActors)
+        
         Enum.reduce(0..n2-1, %{}, fn(i, acc) ->
             left = 
                 if rem(i-1, n) + div(i,n)*n < 0 do

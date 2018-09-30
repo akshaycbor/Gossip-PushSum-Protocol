@@ -8,7 +8,7 @@ defmodule SupervisorNode do
     def initChildren(numNodes) do
         Enum.map( 1..numNodes, fn(x) ->
             nodeName = String.to_atom("Node#{x}")
-            {:ok, pid} = GenServer.start_link(ChildNode, {0, []}, name: nodeName)
+            {:ok, pid} = GenServer.start_link(ChildNode, [{0, []}, {x, 1, -1, 0}], name: nodeName)
             {String.to_atom("Node#{x}"), pid}
         end)
     end
@@ -46,13 +46,39 @@ defmodule SupervisorNode do
         [{_, received}] = :ets.lookup(:count, "received")
         [{_, stopped}] = :ets.lookup(:count, "stopped")
 
-        if received/numNodes > 0.95 || stopped/numNodes > 0.70 do
+        if received/numNodes > 0.90 || stopped/numNodes > 0.50 do
             IO.puts("Received #{received}, Stopped #{stopped}, Time taken #{Time.diff(Time.utc_now, start_time, :microsecond)}")
             Process.exit(self(), :kill)
         else
-            :timer.sleep(100)
+            :timer.sleep(10)
             IO.puts("Received #{received}, Stopped #{stopped}")
             check_convergence(numNodes, start_time)
+        end
+    end
+
+    def start_pushsum(childActors) do
+
+        :ets.new(:count, [:set, :public, :named_table])
+        :ets.insert(:count, {"dead", 0})
+
+        Enum.map childActors, fn x -> 
+            x |> elem(1) |> GenServer.cast({:receive_pushsum_message, 0, 0})
+        end
+
+        start_time = Time.utc_now()
+        check_pushsum_convergence(length(childActors), start_time)
+    end
+
+    def check_pushsum_convergence(numNodes, start_time) do
+        [{_, dead}] = :ets.lookup(:count, "dead")
+
+        if dead/numNodes > 0.9 do
+            IO.puts("Dead #{dead}, Time taken #{Time.diff(Time.utc_now, start_time, :microsecond)}")
+            Process.exit(self(), :kill)
+        else
+            :timer.sleep(10)
+            IO.puts("Dead #{dead}")
+            check_pushsum_convergence(numNodes, start_time)
         end
     end
 end
